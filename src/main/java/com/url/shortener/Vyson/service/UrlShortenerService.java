@@ -24,7 +24,7 @@ public class UrlShortenerService {
 
         UrlData saved = urlRepository.save(urlData);
 
-        String shortCode = Base62Encoder.encode(saved.getId());
+        String shortCode = base62Encoder.encode(saved.getId());
         urlData.setShortUrl(shortCode);
 
         urlRepository.save(urlData);

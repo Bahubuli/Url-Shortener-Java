@@ -1,11 +1,9 @@
 package com.url.shortener.Vyson.controllers;
 
 import com.url.shortener.Vyson.dto.UrlRequest;
-import com.url.shortener.Vyson.modal.UrlData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import com.url.shortener.Vyson.service.UrlShortenerService;
@@ -38,7 +36,6 @@ public String shortenUrl(@RequestBody UrlRequest req)
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("URL Not Found");
    }
    catch (Exception e) {
-      e.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
    }
 

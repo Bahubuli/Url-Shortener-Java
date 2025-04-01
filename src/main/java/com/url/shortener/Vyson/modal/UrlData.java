@@ -2,9 +2,6 @@ package com.url.shortener.Vyson.modal;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
 
 @Entity
 @Data
