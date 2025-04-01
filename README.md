@@ -4,22 +4,6 @@
 
 A simple yet powerful **URL Shortener** application built with Java Spring Boot and PostgreSQL. This project provides the ability to shorten long URLs into compact, shareable links. Future updates will include advanced features such as analytics, sharding, and URL activation/deactivation.
 
----
-
-## Table of Contents
-
-1. [Features](#features)
-2. [Getting Started](#getting-started)
-   - [Prerequisites](#prerequisites)
-   - [Installation](#installation)
-3. [Usage](#usage)
-4. [API Endpoints](#api-endpoints)
-5. [Future Enhancements](#future-enhancements)
-6. [Contributing](#contributing)
-7. [License](#license)
-8. [Contact](#contact)
-
----
 
 ## Features
 
@@ -48,9 +32,4 @@ Before running the application, ensure you have the following installed:
 - PostgreSQL (database)
 - Git (optional, for cloning the repository)
 
-### Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/url-shortener.git
-   cd url-shortener
