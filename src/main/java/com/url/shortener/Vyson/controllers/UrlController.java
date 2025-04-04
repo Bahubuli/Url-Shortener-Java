@@ -1,6 +1,7 @@
 package com.url.shortener.Vyson.controllers;
 
 import com.url.shortener.Vyson.dto.UrlRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class UrlController {
 private UrlShortenerService urlShortenerService;
 
 @PostMapping("/shorten")
-public String shortenUrl(@RequestBody UrlRequest req)
+public String shortenUrl(@Valid @RequestBody UrlRequest req)
 {
    String longUrl = req.getLongUrl();
    String shortCode = urlShortenerService.GenerateShortCode(longUrl);
@@ -29,6 +30,7 @@ public String shortenUrl(@RequestBody UrlRequest req)
 
    try {
       String longUrl = urlShortenerService.getLongUrl(shortCode);
+      System.out.println("longUrl: ######################################################## " + longUrl);
       if(longUrl!=null)
       {
          return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(longUrl)).build();
@@ -36,6 +38,7 @@ public String shortenUrl(@RequestBody UrlRequest req)
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("URL Not Found");
    }
    catch (Exception e) {
+      System.out.println("---> error is ---> " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
    }
 

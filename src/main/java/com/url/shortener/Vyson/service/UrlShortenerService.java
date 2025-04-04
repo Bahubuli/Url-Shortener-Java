@@ -35,8 +35,8 @@ public class UrlShortenerService {
 
     public String getLongUrl(String shortCode) {
         UrlData urlData = urlRepository.findByShortUrl(shortCode);
-        String longUrl = urlData.getLongUrl();
-        return longUrl;
+        return (urlData != null) ? urlData.getLongUrl() : null;
+
     }
 
 }
