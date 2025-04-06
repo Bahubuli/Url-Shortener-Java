@@ -41,6 +41,12 @@ public String shortenUrl(@Valid @RequestBody UrlRequest req)
       System.out.println("---> error is ---> " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
    }
+}
+@DeleteMapping("/delete")
+   public ResponseEntity<?> deleteLongUrl(@RequestParam("longUrl") String longUrl) {
+
+      String response = urlShortenerService.deleteLongUrl(longUrl);
+      return ResponseEntity.status(HttpStatus.OK).body(response);
 
 }
 
