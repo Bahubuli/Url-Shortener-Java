@@ -21,4 +21,11 @@ public class UrlData {
     private Long lastAccessedDate;
     @Column(name="visit_count")
     private int visitCount;
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="user_id")
+    private User user;
+
 }

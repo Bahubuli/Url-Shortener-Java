@@ -2,13 +2,16 @@ package com.url.shortener.Vyson.service;
 
 import com.url.shortener.Vyson.exception.DuplicateUrlException;
 import com.url.shortener.Vyson.exception.NotFoundException;
+import com.url.shortener.Vyson.exception.UnauthorizedException;
 import com.url.shortener.Vyson.modal.UrlData;
+import com.url.shortener.Vyson.modal.User;
 import com.url.shortener.Vyson.repo.UrlRepository;
 import com.url.shortener.Vyson.utils.Base62Encoder;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,7 +23,7 @@ public class UrlShortenerService {
     public Base62Encoder base62Encoder;
 
     @Transactional
-    public String GenerateShortCode(String longUrl) {
+    public String GenerateShortCode(String longUrl, User user) {
 
 //        Optional<UrlData> existing = Optional.ofNullable(urlRepository.findByLongUrl(longUrl));
 //        if(existing.isPresent()){
@@ -29,6 +32,7 @@ public class UrlShortenerService {
         UrlData urlData = new UrlData();
         urlData.setLongUrl(longUrl);
         urlData.setShortUrl(" ");
+        urlData.setUser(user);
 
         UrlData saved = urlRepository.save(urlData);
 
@@ -58,12 +62,20 @@ public class UrlShortenerService {
 
     }
     @Transactional
-    public String deleteLongUrl(String longUrl) {
-        int deletedCount = urlRepository.deleteByLongUrl(longUrl);
-        if(deletedCount==0)
-            throw new NotFoundException("given url does not exist");;
+    public String deleteLongUrl(String longUrl,User user) {
 
-        return "Deleted " + deletedCount + " urls";
+        List<UrlData> urlData  = urlRepository.findByLongUrlAndUser(longUrl,user);
+
+        if(urlData)
+            throw new NotFoundException("given url does not exist");
+
+        if(!urlData.getUser().getId().equals(user.getId()))
+            throw new UnauthorizedException("you are not authorized to delete this url");
+
+        urlData.setIsDeleted(true);
+        urlRepository.save(urlData);
+
+        return "Your Url is deleted";
     }
 
 }
