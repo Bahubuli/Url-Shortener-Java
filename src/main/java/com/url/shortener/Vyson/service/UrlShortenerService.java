@@ -22,10 +22,10 @@ public class UrlShortenerService {
     @Transactional
     public String GenerateShortCode(String longUrl) {
 
-        Optional<UrlData> existing = Optional.ofNullable(urlRepository.findByLongUrl(longUrl));
-        if(existing.isPresent()){
-           throw new DuplicateUrlException(longUrl + " already exists");
-        }
+//        Optional<UrlData> existing = Optional.ofNullable(urlRepository.findByLongUrl(longUrl));
+//        if(existing.isPresent()){
+//           throw new DuplicateUrlException(longUrl + " already exists");
+//        }
         UrlData urlData = new UrlData();
         urlData.setLongUrl(longUrl);
         urlData.setShortUrl(" ");
@@ -41,9 +41,20 @@ public class UrlShortenerService {
 
     }
 
+    @Transactional
     public String getLongUrl(String shortCode) {
         UrlData urlData = urlRepository.findByShortUrl(shortCode);
-        return (urlData != null) ? urlData.getLongUrl() : null;
+
+        if(urlData!=null){
+            urlData.setVisitCount(urlData.getVisitCount()+1);
+
+            urlData.setLastAccessedDate(System.currentTimeMillis());
+
+            urlRepository.save(urlData);
+
+            return urlData.getLongUrl();
+        }
+        return null;
 
     }
     @Transactional

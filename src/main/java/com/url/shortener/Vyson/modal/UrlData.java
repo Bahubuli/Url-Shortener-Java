@@ -15,4 +15,10 @@ public class UrlData {
     private String shortUrl;
     @Column(name="long_url")
     private String longUrl;
+    @Column(name="created_date", updatable = false, insertable = false)
+    private long createdDate;
+    @Column(name="last_accessed_date")
+    private Long lastAccessedDate;
+    @Column(name="visit_count")
+    private int visitCount;
 }
