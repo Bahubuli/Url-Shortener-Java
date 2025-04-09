@@ -13,6 +13,7 @@ import com.url.shortener.Vyson.service.UrlShortenerService;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.Optional;
 
 @RestController
@@ -33,14 +34,13 @@ public String shortenUrl(@RequestHeader(value="api_key", required = false) Strin
            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
 
    String longUrl = req.getLongUrl();
-   String shortCode = urlShortenerService.GenerateShortCode(longUrl,user);
+   Instant expiryDate = req.getExpiryDate();
+   String shortCode = urlShortenerService.GenerateShortCode(longUrl,user,expiryDate);
    return shortCode;
 }
 
 @GetMapping("/redirect")
    public ResponseEntity<?> redirect(@RequestParam("code") String shortCode) {
-
-   try {
       String longUrl = urlShortenerService.getLongUrl(shortCode);
       System.out.println("longUrl: ######################################################## " + longUrl);
       if(longUrl!=null)
@@ -48,11 +48,6 @@ public String shortenUrl(@RequestHeader(value="api_key", required = false) Strin
          return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(longUrl)).build();
       }
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("URL Not Found");
-   }
-   catch (Exception e) {
-      System.out.println("---> error is ---> " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
-   }
 }
 @DeleteMapping("/delete")
    public ResponseEntity<?> deleteLongUrl(@RequestParam("longUrl") String longUrl,@RequestHeader(value="api_key", required = false) String api_key) {

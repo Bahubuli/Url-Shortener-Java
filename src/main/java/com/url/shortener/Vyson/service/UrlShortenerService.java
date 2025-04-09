@@ -1,6 +1,7 @@
 package com.url.shortener.Vyson.service;
 
 import com.url.shortener.Vyson.exception.DuplicateUrlException;
+import com.url.shortener.Vyson.exception.ExpiredException;
 import com.url.shortener.Vyson.exception.NotFoundException;
 import com.url.shortener.Vyson.exception.UnauthorizedException;
 import com.url.shortener.Vyson.modal.UrlData;
@@ -11,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +25,7 @@ public class UrlShortenerService {
     public Base62Encoder base62Encoder;
 
     @Transactional
-    public String GenerateShortCode(String longUrl, User user) {
+    public String GenerateShortCode(String longUrl, User user, Instant expiryDate) {
 
 //        Optional<UrlData> existing = Optional.ofNullable(urlRepository.findByLongUrl(longUrl));
 //        if(existing.isPresent()){
@@ -33,6 +35,10 @@ public class UrlShortenerService {
         urlData.setLongUrl(longUrl);
         urlData.setShortUrl(" ");
         urlData.setUser(user);
+
+        if(expiryDate!=null){
+            urlData.setExpiryDate(expiryDate.toEpochMilli());
+        }
 
         UrlData saved = urlRepository.save(urlData);
 
@@ -49,7 +55,18 @@ public class UrlShortenerService {
     public String getLongUrl(String shortCode) {
         UrlData urlData = urlRepository.findByShortUrl(shortCode);
 
-        if(urlData!=null && urlData.expi){
+        // validate url
+        if(urlData==null){ return null; }
+
+        // validate the expiry date
+        Long expiryDate = urlData.getExpiryDate();
+        if(expiryDate!=null)
+        {
+            long now = Instant.now().toEpochMilli();
+            if(now>expiryDate)
+               throw new ExpiredException("your shortened url is expired");
+        }
+
             urlData.setVisitCount(urlData.getVisitCount()+1);
 
             urlData.setLastAccessedDate(System.currentTimeMillis());
@@ -57,8 +74,6 @@ public class UrlShortenerService {
             urlRepository.save(urlData);
 
             return urlData.getLongUrl();
-        }
-        return null;
 
     }
     @Transactional

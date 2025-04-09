@@ -23,6 +23,8 @@ public class UrlData {
     private int visitCount;
     @Column(nullable = false)
     private Boolean isDeleted = false;
+    @Column(name="expiry_date")
+    private Long expiryDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")
