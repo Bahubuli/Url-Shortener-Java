@@ -34,8 +34,9 @@ public String shortenUrl(@RequestHeader(value="api_key", required = false) Strin
            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
 
    String longUrl = req.getLongUrl();
+   String userShortCode = req.getShortCode();
    Instant expiryDate = req.getExpiryDate();
-   String shortCode = urlShortenerService.GenerateShortCode(longUrl,user,expiryDate);
+   String shortCode = urlShortenerService.GenerateShortCode(longUrl,user,expiryDate,userShortCode);
    return shortCode;
 }
 

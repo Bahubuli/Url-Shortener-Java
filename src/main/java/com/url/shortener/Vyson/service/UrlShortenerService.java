@@ -25,12 +25,21 @@ public class UrlShortenerService {
     public Base62Encoder base62Encoder;
 
     @Transactional
-    public String GenerateShortCode(String longUrl, User user, Instant expiryDate) {
+    public String GenerateShortCode(String longUrl, User user, Instant expiryDate,String userShortCode) {
 
 //        Optional<UrlData> existing = Optional.ofNullable(urlRepository.findByLongUrl(longUrl));
 //        if(existing.isPresent()){
 //           throw new DuplicateUrlException(longUrl + " already exists");
 //        }
+        if(userShortCode!=null)
+        {
+            UrlData existingUrlData = urlRepository.findByShortUrl(userShortCode);
+            if(existingUrlData!=null  && existingUrlData.getUser().getId().equals(user.getId())) {
+                throw new DuplicateUrlException("This short code is already in use");
+            }
+        }
+
+
         UrlData urlData = new UrlData();
         urlData.setLongUrl(longUrl);
         urlData.setShortUrl(" ");
@@ -40,10 +49,18 @@ public class UrlShortenerService {
             urlData.setExpiryDate(expiryDate.toEpochMilli());
         }
 
+
         UrlData saved = urlRepository.save(urlData);
 
-        String shortCode = base62Encoder.encode(saved.getId());
-        urlData.setShortUrl(shortCode);
+        String shortCode = userShortCode;
+        if(userShortCode!=null)
+            urlData.setShortUrl(userShortCode);
+        else
+        {
+            shortCode = base62Encoder.encode(saved.getId());
+            urlData.setShortUrl(shortCode);
+        }
+
 
         urlRepository.save(urlData);
 
