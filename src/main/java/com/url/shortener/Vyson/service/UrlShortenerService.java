@@ -49,7 +49,7 @@ public class UrlShortenerService {
     public String getLongUrl(String shortCode) {
         UrlData urlData = urlRepository.findByShortUrl(shortCode);
 
-        if(urlData!=null){
+        if(urlData!=null && urlData.expi){
             urlData.setVisitCount(urlData.getVisitCount()+1);
 
             urlData.setLastAccessedDate(System.currentTimeMillis());
@@ -64,16 +64,15 @@ public class UrlShortenerService {
     @Transactional
     public String deleteLongUrl(String longUrl,User user) {
 
-        List<UrlData> urlData  = urlRepository.findByLongUrlAndUser(longUrl,user);
+        List<UrlData> urlDataList  = urlRepository.findByLongUrlAndUser(longUrl,user);
 
-        if(urlData)
+        if(urlDataList.isEmpty())
             throw new NotFoundException("given url does not exist");
 
-        if(!urlData.getUser().getId().equals(user.getId()))
-            throw new UnauthorizedException("you are not authorized to delete this url");
-
-        urlData.setIsDeleted(true);
-        urlRepository.save(urlData);
+        for(UrlData urlData : urlDataList){
+            urlData.setIsDeleted(true);
+            urlRepository.save(urlData);
+        }
 
         return "Your Url is deleted";
     }
