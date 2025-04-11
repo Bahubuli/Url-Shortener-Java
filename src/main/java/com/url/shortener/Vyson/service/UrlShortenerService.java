@@ -1,5 +1,7 @@
 package com.url.shortener.Vyson.service;
 
+import com.url.shortener.Vyson.dto.UrlRequest;
+import com.url.shortener.Vyson.dto.UrlResponse;
 import com.url.shortener.Vyson.exception.DuplicateUrlException;
 import com.url.shortener.Vyson.exception.ExpiredException;
 import com.url.shortener.Vyson.exception.NotFoundException;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,50 +27,13 @@ public class UrlShortenerService {
     @Autowired
     public Base62Encoder base62Encoder;
 
+    @Autowired
+    public TransactionalUrlService transactionalUrlService;
+
     @Transactional
-    public String GenerateShortCode(String longUrl, User user, Instant expiryDate,String userShortCode) {
-
-//        Optional<UrlData> existing = Optional.ofNullable(urlRepository.findByLongUrl(longUrl));
-//        if(existing.isPresent()){
-//           throw new DuplicateUrlException(longUrl + " already exists");
-//        }
-        if(userShortCode!=null)
-        {
-            UrlData existingUrlData = urlRepository.findByShortUrl(userShortCode);
-            if(existingUrlData!=null  && existingUrlData.getUser().getId().equals(user.getId())) {
-                throw new DuplicateUrlException("This short code is already in use");
-            }
-        }
-
-
-        UrlData urlData = new UrlData();
-        urlData.setLongUrl(longUrl);
-        urlData.setShortUrl(" ");
-        urlData.setUser(user);
-
-        if(expiryDate!=null){
-            urlData.setExpiryDate(expiryDate.toEpochMilli());
-        }
-
-
-        UrlData saved = urlRepository.save(urlData);
-
-        String shortCode = userShortCode;
-        if(userShortCode!=null)
-            urlData.setShortUrl(userShortCode);
-        else
-        {
-            shortCode = base62Encoder.encode(saved.getId());
-            urlData.setShortUrl(shortCode);
-        }
-
-
-        urlRepository.save(urlData);
-
-        return shortCode;
-
+    public String GenerateShortCode(String longUrl, User user, Instant expiryDate, String userShortCode) {
+        return transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
     }
-
     @Transactional
     public String getLongUrl(String shortCode) {
         UrlData urlData = urlRepository.findByShortUrl(shortCode);
@@ -109,4 +75,20 @@ public class UrlShortenerService {
         return "Your Url is deleted";
     }
 
+    public List<UrlResponse> shortenUrlsInBatch(List<UrlRequest> requests, User user) {
+        List<UrlResponse> responses = new ArrayList<>();
+        for (UrlRequest req : requests) {
+            try {
+
+                String shortUrl = GenerateShortCode(req.getLongUrl(), user, req.getExpiryDate(), req.getShortCode());
+
+                responses.add(new UrlResponse(req.getLongUrl(), shortUrl, true, null));
+            } catch (Exception e) {
+                // In case of any error, create an error response.
+                UrlResponse.ErrorResponse errorResponse = new UrlResponse.ErrorResponse("ERR001", e.getMessage());
+                responses.add(new UrlResponse(req.getLongUrl(), null, false, errorResponse));
+            }
+        }
+        return responses;
+    }
 }

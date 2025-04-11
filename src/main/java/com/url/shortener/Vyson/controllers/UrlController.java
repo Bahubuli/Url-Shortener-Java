@@ -1,6 +1,9 @@
 package com.url.shortener.Vyson.controllers;
 
+import com.url.shortener.Vyson.dto.BatchUrlRequest;
+import com.url.shortener.Vyson.dto.BatchUrlResponse;
 import com.url.shortener.Vyson.dto.UrlRequest;
+import com.url.shortener.Vyson.dto.UrlResponse;
 import com.url.shortener.Vyson.modal.User;
 import com.url.shortener.Vyson.repo.UserRepository;
 import jakarta.validation.Valid;
@@ -14,6 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -61,6 +66,25 @@ public String shortenUrl(@RequestHeader(value="api_key", required = false) Strin
 
 }
 
+@PostMapping("/shorten/batch")
+public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody BatchUrlRequest req,
+                                                       @RequestHeader(value="api_key", required = false) String api_key) {
+   User user = userRepository.findByApiKey(api_key)
+           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
 
+   List<UrlResponse> results = urlShortenerService.shortenUrlsInBatch(req.getUrls(), user);
+
+   // Calculate the counts based on each response's success flag
+   int successCount = (int) results.stream().filter(UrlResponse::isSuccess).count();
+   int errorCount = results.size() - successCount;
+
+   // Build and populate the BatchUrlResponse
+   BatchUrlResponse response = new BatchUrlResponse();
+   response.setResults(results);
+   response.setSuccessCount(successCount);
+   response.setErrorCount(errorCount);
+
+   return ResponseEntity.status(HttpStatus.OK).body(response);
+}
 
 }
