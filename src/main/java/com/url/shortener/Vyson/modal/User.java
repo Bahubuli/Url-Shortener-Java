@@ -23,6 +23,8 @@ public class User {
 
     @Column(name="created_date")
     private Long createdDate;
+    @Column
+    private String tier;
 
 
 

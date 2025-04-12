@@ -8,7 +8,8 @@ import lombok.Data;
 public class UrlData {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "url_data_seq_gen", sequenceName = "url_data_seq", allocationSize = 1)
+    @Column(updatable = true)
     private Long id;  // Auto-incremented numeric ID
 
     @Column(name="short_url")

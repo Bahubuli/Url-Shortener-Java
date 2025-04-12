@@ -32,8 +32,7 @@ private UserRepository userRepository;
 
 @PostMapping("/shorten")
 public String shortenUrl(@RequestHeader(value="api_key", required = false) String api_key,
-                         @Valid @RequestBody UrlRequest req)
-{
+                         @Valid @RequestBody UrlRequest req) {
 
    User user = userRepository.findByApiKey(api_key)
            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
@@ -56,12 +55,12 @@ public String shortenUrl(@RequestHeader(value="api_key", required = false) Strin
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("URL Not Found");
 }
 @DeleteMapping("/delete")
-   public ResponseEntity<?> deleteLongUrl(@RequestParam("longUrl") String longUrl,@RequestHeader(value="api_key", required = false) String api_key) {
+   public ResponseEntity<?> deleteShortCode(@RequestParam("shortCode") String shortCode,@RequestHeader(value="api_key", required = false) String api_key) {
 
    User user = userRepository.findByApiKey(api_key)
            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
 
-      String response = urlShortenerService.deleteLongUrl(longUrl,user);
+      String response = urlShortenerService.deleteShortCode(shortCode,user);
       return ResponseEntity.status(HttpStatus.OK).body(response);
 
 }
@@ -87,4 +86,11 @@ public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody Batch
    return ResponseEntity.status(HttpStatus.OK).body(response);
 }
 
+//@PutMapping("/shortCode")
+//   public String shortCode(@Valid @RequestBody UrlRequest req,@RequestHeader(value="api_key", required = false) String api_key) {
+//
+//   User user = userRepository.findByApiKey(api_key)
+//           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
+//
+//}
 }

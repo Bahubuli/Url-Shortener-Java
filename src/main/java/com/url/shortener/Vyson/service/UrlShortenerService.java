@@ -60,12 +60,12 @@ public class UrlShortenerService {
 
     }
     @Transactional
-    public String deleteLongUrl(String longUrl,User user) {
+    public String deleteShortCode(String shortCode,User user) {
 
-        List<UrlData> urlDataList  = urlRepository.findByLongUrlAndUser(longUrl,user);
+        List<UrlData> urlDataList  = urlRepository.findByShortUrlAndUser(shortCode,user);
 
         if(urlDataList.isEmpty())
-            throw new NotFoundException("given url does not exist");
+            throw new NotFoundException("given short code does not exist");
 
         for(UrlData urlData : urlDataList){
             urlData.setIsDeleted(true);
@@ -76,6 +76,8 @@ public class UrlShortenerService {
     }
 
     public List<UrlResponse> shortenUrlsInBatch(List<UrlRequest> requests, User user) {
+        if(user.getTier().equals("hobby"))
+            throw new UnauthorizedException("Please upgrade to business tier in order to bulk shortening operation");
         List<UrlResponse> responses = new ArrayList<>();
         for (UrlRequest req : requests) {
             try {
