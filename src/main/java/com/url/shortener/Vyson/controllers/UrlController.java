@@ -1,9 +1,6 @@
 package com.url.shortener.Vyson.controllers;
 
-import com.url.shortener.Vyson.dto.BatchUrlRequest;
-import com.url.shortener.Vyson.dto.BatchUrlResponse;
-import com.url.shortener.Vyson.dto.UrlRequest;
-import com.url.shortener.Vyson.dto.UrlResponse;
+import com.url.shortener.Vyson.dto.*;
 import com.url.shortener.Vyson.modal.User;
 import com.url.shortener.Vyson.repo.UserRepository;
 import jakarta.validation.Valid;
@@ -86,11 +83,17 @@ public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody Batch
    return ResponseEntity.status(HttpStatus.OK).body(response);
 }
 
-//@PutMapping("/shortCode")
-//   public String shortCode(@Valid @RequestBody UrlRequest req,@RequestHeader(value="api_key", required = false) String api_key) {
-//
-//   User user = userRepository.findByApiKey(api_key)
-//           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
-//
-//}
+@PutMapping("/urlData")
+   public String shortCode(@Valid @RequestBody UpdateUrlDataRequest req, @RequestHeader(value="api_key", required = false) String api_key) {
+
+   User user = userRepository.findByApiKey(api_key)
+           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
+   Long id = req.getId();
+   String longUrl = req.getLongUrl();
+   String userShortCode = req.getShortCode();
+   Instant expiryDate = req.getExpiryDate();
+   Boolean active = req.getActive();
+   String shortCode = urlShortenerService.updateUrlData(id,longUrl,user,expiryDate,userShortCode,active);
+   return shortCode;
+}
 }

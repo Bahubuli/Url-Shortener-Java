@@ -2,7 +2,6 @@ package com.url.shortener.Vyson.service;
 
 import com.url.shortener.Vyson.dto.UrlRequest;
 import com.url.shortener.Vyson.dto.UrlResponse;
-import com.url.shortener.Vyson.exception.DuplicateUrlException;
 import com.url.shortener.Vyson.exception.ExpiredException;
 import com.url.shortener.Vyson.exception.NotFoundException;
 import com.url.shortener.Vyson.exception.UnauthorizedException;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UrlShortenerService {
@@ -30,7 +28,7 @@ public class UrlShortenerService {
     @Autowired
     public TransactionalUrlService transactionalUrlService;
 
-    @Transactional
+
     public String GenerateShortCode(String longUrl, User user, Instant expiryDate, String userShortCode) {
         return transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
     }
@@ -67,12 +65,9 @@ public class UrlShortenerService {
         if(urlDataList.isEmpty())
             throw new NotFoundException("given short code does not exist");
 
-        for(UrlData urlData : urlDataList){
-            urlData.setIsDeleted(true);
-            urlRepository.save(urlData);
-        }
+        int isDeleted = urlRepository.deleteByShortUrlAndUser(shortCode,user);
 
-        return "Your Url is deleted";
+        return isDeleted!=0 ?  "Your Url is deleted" : "delete operation failed";
     }
 
     public List<UrlResponse> shortenUrlsInBatch(List<UrlRequest> requests, User user) {
@@ -92,5 +87,37 @@ public class UrlShortenerService {
             }
         }
         return responses;
+    }
+
+    @Transactional
+    public String updateUrlData(Long id,String longUrl, User user, Instant expiryDate, String userShortCode,Boolean active) {
+        List<UrlData> oldUrlDataList = urlRepository.findByIdAndUser(id,user);
+        if(oldUrlDataList.isEmpty())
+            throw new NotFoundException("given id does not exist");
+        UrlData oldUrlData = oldUrlDataList.get(0);
+
+
+        if(userShortCode!=null)
+        {
+            String shortCode = transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
+            List<UrlData> updatedUrlDataList = urlRepository.findByShortUrlAndUser(shortCode,user);
+            if(active!=null)
+            {
+                UrlData updatedUrlData = updatedUrlDataList.get(0);
+                updatedUrlData.setActive(active);
+            }
+            String oldShortCode = oldUrlData.getShortUrl();
+            int isDeleted = urlRepository.deleteByShortUrlAndUser(oldShortCode,user);
+            return "Your Url is updated";
+        }
+        else
+        {
+            if(longUrl!=null) oldUrlData.setLongUrl(longUrl);
+            if(expiryDate!=null)   oldUrlData.setExpiryDate(expiryDate.toEpochMilli());
+            if(active!=null)   oldUrlData.setActive(active);
+            urlRepository.save(oldUrlData);
+            return "Your Url is updated";
+        }
+        //return transactionalUrlService.updateUrlTransactional(id,longUrl, user, expiryDate, userShortCode);
     }
 }

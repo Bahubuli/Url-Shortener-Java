@@ -54,9 +54,6 @@ public class TransactionalUrlService {
         // Create entity with custom ID
         UrlData urlData = createUrlData(desiredId, userShortCode, longUrl, user, expiryDate);
 
-        // Adjust the sequence to ensure system-generated IDs will not collide in the future.
-        //adjustSequence(desiredId + 1);
-
         entityManager.persist(urlData);
         return userShortCode;
     }
@@ -102,6 +99,7 @@ public class TransactionalUrlService {
                         "ALTER SEQUENCE url_data_id_seq RESTART WITH " + nextVal)
                 .executeUpdate();
     }
+
 
 }
 

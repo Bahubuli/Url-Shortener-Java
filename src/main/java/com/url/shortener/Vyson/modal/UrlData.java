@@ -23,7 +23,7 @@ public class UrlData {
     @Column(name="visit_count")
     private int visitCount;
     @Column(nullable = false)
-    private Boolean isDeleted = false;
+    private Boolean active = false;
     @Column(name="expiry_date")
     private Long expiryDate;
 
