@@ -1,6 +1,7 @@
 package com.url.shortener.Vyson.controllers;
 
 import com.url.shortener.Vyson.dto.*;
+import com.url.shortener.Vyson.modal.UrlData;
 import com.url.shortener.Vyson.modal.User;
 import com.url.shortener.Vyson.repo.UserRepository;
 import jakarta.validation.Valid;
@@ -42,9 +43,8 @@ public String shortenUrl(@RequestHeader(value="api_key", required = false) Strin
 }
 
 @GetMapping("/redirect")
-   public ResponseEntity<?> redirect(@RequestParam("code") String shortCode) {
-      String longUrl = urlShortenerService.getLongUrl(shortCode);
-      System.out.println("longUrl: ######################################################## " + longUrl);
+   public ResponseEntity<?> redirect(@RequestParam("code") String shortCode,@RequestParam(name="password",  required = false) String password) {
+      String longUrl = urlShortenerService.getLongUrl(shortCode,password);
       if(longUrl!=null)
       {
          return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(longUrl)).build();
@@ -96,4 +96,15 @@ public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody Batch
    String shortCode = urlShortenerService.updateUrlData(id,longUrl,user,expiryDate,userShortCode,active);
    return shortCode;
 }
+
+
+@GetMapping("/allUrls")
+   public List<UrlDataDTO>GetAllUrls(@RequestHeader(value="api_key", required = false) String api_key) {
+
+   User user = userRepository.findByApiKey(api_key)
+           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
+
+   return urlShortenerService.getAllUrls(user);
+}
+
 }

@@ -1,5 +1,6 @@
 package com.url.shortener.Vyson.service;
 
+import com.url.shortener.Vyson.dto.UrlDataDTO;
 import com.url.shortener.Vyson.dto.UrlRequest;
 import com.url.shortener.Vyson.dto.UrlResponse;
 import com.url.shortener.Vyson.exception.ExpiredException;
@@ -33,7 +34,7 @@ public class UrlShortenerService {
         return transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
     }
     @Transactional
-    public String getLongUrl(String shortCode) {
+    public String getLongUrl(String shortCode,String password) {
         UrlData urlData = urlRepository.findByShortUrl(shortCode);
 
         // validate url
@@ -47,14 +48,18 @@ public class UrlShortenerService {
             if(now>expiryDate)
                throw new ExpiredException("your shortened url is expired");
         }
+        String existingPassword = urlData.getPassword();
+        System.out.println("existingPassword: "+existingPassword);
+        if(existingPassword!=null && !existingPassword.equals(password))
+            throw new UnauthorizedException("your password is incorrect");
 
-            urlData.setVisitCount(urlData.getVisitCount()+1);
+        urlData.setVisitCount(urlData.getVisitCount()+1);
 
-            urlData.setLastAccessedDate(System.currentTimeMillis());
+        urlData.setLastAccessedDate(System.currentTimeMillis());
 
-            urlRepository.save(urlData);
+        urlRepository.save(urlData);
 
-            return urlData.getLongUrl();
+        return urlData.getLongUrl();
 
     }
     @Transactional
@@ -119,5 +124,9 @@ public class UrlShortenerService {
             return "Your Url is updated";
         }
         //return transactionalUrlService.updateUrlTransactional(id,longUrl, user, expiryDate, userShortCode);
+    }
+
+    public List<UrlDataDTO> getAllUrls(User user) {
+        return urlRepository.findAllByUserId(user.getId());
     }
 }

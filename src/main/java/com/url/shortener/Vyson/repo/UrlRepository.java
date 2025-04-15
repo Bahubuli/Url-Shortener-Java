@@ -1,9 +1,11 @@
 package com.url.shortener.Vyson.repo;
 
+import com.url.shortener.Vyson.dto.UrlDataDTO;
 import com.url.shortener.Vyson.modal.UrlData;
 import com.url.shortener.Vyson.modal.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,4 +23,8 @@ public interface UrlRepository extends JpaRepository<UrlData,String> {
     // Add explicit native query annotation
     @Query(value = "SELECT nextval('url_data_id_seq')", nativeQuery = true)
     Long getNextIdSequence();  // This is now a native SQL query
+
+    @Query("SELECT new com.url.shortener.Vyson.dto.UrlDataDTO(u.id, u.shortUrl, u.longUrl, u.createdDate, u.lastAccessedDate, u.visitCount, u.active, u.expiryDate) " +
+            "FROM UrlData u WHERE u.user.id = :userId")
+    List<UrlDataDTO> findAllByUserId(@Param("userId") Long userId);
 }

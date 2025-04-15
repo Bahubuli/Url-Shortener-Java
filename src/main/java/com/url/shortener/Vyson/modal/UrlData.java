@@ -26,6 +26,8 @@ public class UrlData {
     private Boolean active = false;
     @Column(name="expiry_date")
     private Long expiryDate;
+    @Column(name="password")
+    private String password;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_id")
