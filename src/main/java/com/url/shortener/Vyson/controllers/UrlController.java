@@ -29,7 +29,7 @@ private UrlShortenerService urlShortenerService;
 private UserRepository userRepository;
 
 @PostMapping("/shorten")
-public String shortenUrl(@RequestHeader(value="api_key", required = false) String api_key,
+public ResponseEntity<UrlResponse> shortenUrl(@RequestHeader(value="api_key", required = false) String api_key,
                          @Valid @RequestBody UrlRequest req) {
 
    User user = userRepository.findByApiKey(api_key)
@@ -39,7 +39,8 @@ public String shortenUrl(@RequestHeader(value="api_key", required = false) Strin
    String userShortCode = req.getShortCode();
    Instant expiryDate = req.getExpiryDate();
    String shortCode = urlShortenerService.GenerateShortCode(longUrl,user,expiryDate,userShortCode);
-   return shortCode;
+   UrlResponse response =  new UrlResponse(longUrl,shortCode,true,null);
+   return ResponseEntity.status(HttpStatus.CREATED).body(response);
 }
 
 @GetMapping("/redirect")
@@ -83,20 +84,29 @@ public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody Batch
    return ResponseEntity.status(HttpStatus.OK).body(response);
 }
 
-@PutMapping("/urlData")
-   public String shortCode(@Valid @RequestBody UpdateUrlDataRequest req, @RequestHeader(value="api_key", required = false) String api_key) {
+   @PutMapping("/urlData")
+   public ResponseEntity<UrlResponse> updateUrlData(
+           @Valid @RequestBody UpdateUrlDataRequest req,
+           @RequestHeader(value="api_key", required = false) String api_key) {
 
-   User user = userRepository.findByApiKey(api_key)
-           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
-   Long id = req.getId();
-   String longUrl = req.getLongUrl();
-   String userShortCode = req.getShortCode();
-   Instant expiryDate = req.getExpiryDate();
-   Boolean active = req.getActive();
-   String shortCode = urlShortenerService.updateUrlData(id,longUrl,user,expiryDate,userShortCode,active);
-   return shortCode;
-}
+      User user = userRepository.findByApiKey(api_key)
+              .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
 
+      Long id = req.getId();
+      String longUrl = req.getLongUrl();
+      String userShortCode = req.getShortCode();
+      Instant expiryDate = req.getExpiryDate();
+      Boolean active = req.getActive();
+
+      // Update the URL data and get the new short code
+      String shortCode = urlShortenerService.updateUrlData(id, longUrl, user, expiryDate, userShortCode, active);
+
+      // Create the response object; here we're reusing the same UrlResponse structure
+      UrlResponse response = new UrlResponse(longUrl, shortCode, active, null);
+
+      // Return the response with HTTP status 200 OK
+      return ResponseEntity.ok(response);
+   }
 
 @GetMapping("/allUrls")
    public List<UrlDataDTO>GetAllUrls(@RequestHeader(value="api_key", required = false) String api_key) {
