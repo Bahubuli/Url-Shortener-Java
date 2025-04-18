@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UrlResponse {
+    private String id;
     private String longUrl;
     private String shortUrl;
     private boolean success;

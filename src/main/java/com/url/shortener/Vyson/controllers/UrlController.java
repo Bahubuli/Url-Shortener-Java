@@ -38,8 +38,8 @@ public ResponseEntity<UrlResponse> shortenUrl(@RequestHeader(value="api_key", re
    String longUrl = req.getLongUrl();
    String userShortCode = req.getShortCode();
    Instant expiryDate = req.getExpiryDate();
-   String shortCode = urlShortenerService.GenerateShortCode(longUrl,user,expiryDate,userShortCode);
-   UrlResponse response =  new UrlResponse(longUrl,shortCode,true,null);
+   UrlData urlData = urlShortenerService.GenerateShortCode(longUrl,user,expiryDate,userShortCode);
+   UrlResponse response =  new UrlResponse(String.valueOf(urlData.getId()),longUrl,urlData.getShortUrl(),true,null);
    return ResponseEntity.status(HttpStatus.CREATED).body(response);
 }
 
@@ -99,10 +99,10 @@ public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody Batch
       Boolean active = req.getActive();
 
       // Update the URL data and get the new short code
-      String shortCode = urlShortenerService.updateUrlData(id, longUrl, user, expiryDate, userShortCode, active);
+      UrlData urlData = urlShortenerService.updateUrlData(id, longUrl, user, expiryDate, userShortCode, active);
 
       // Create the response object; here we're reusing the same UrlResponse structure
-      UrlResponse response = new UrlResponse(longUrl, shortCode, active, null);
+      UrlResponse response = new UrlResponse(String.valueOf(urlData.getId()),longUrl, urlData.getShortUrl(), urlData.getActive(), null);
 
       // Return the response with HTTP status 200 OK
       return ResponseEntity.ok(response);

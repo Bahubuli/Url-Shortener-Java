@@ -30,7 +30,7 @@ public class UrlShortenerService {
     public TransactionalUrlService transactionalUrlService;
 
 
-    public String GenerateShortCode(String longUrl, User user, Instant expiryDate, String userShortCode) {
+    public UrlData GenerateShortCode(String longUrl, User user, Instant expiryDate, String userShortCode) {
         return transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
     }
     @Transactional
@@ -82,20 +82,20 @@ public class UrlShortenerService {
         for (UrlRequest req : requests) {
             try {
 
-                String shortUrl = GenerateShortCode(req.getLongUrl(), user, req.getExpiryDate(), req.getShortCode());
+                UrlData urlData = GenerateShortCode(req.getLongUrl(), user, req.getExpiryDate(), req.getShortCode());
 
-                responses.add(new UrlResponse(req.getLongUrl(), shortUrl, true, null));
+                responses.add(new UrlResponse(String.valueOf(urlData.getId()),urlData.getLongUrl(), urlData.getShortUrl(), true, null));
             } catch (Exception e) {
                 // In case of any error, create an error response.
                 UrlResponse.ErrorResponse errorResponse = new UrlResponse.ErrorResponse("ERR001", e.getMessage());
-                responses.add(new UrlResponse(req.getLongUrl(), null, false, errorResponse));
+                responses.add(new UrlResponse(null,req.getLongUrl(), null, false, errorResponse));
             }
         }
         return responses;
     }
 
     @Transactional
-    public String updateUrlData(Long id,String longUrl, User user, Instant expiryDate, String userShortCode,Boolean active) {
+    public UrlData updateUrlData(Long id,String longUrl, User user, Instant expiryDate, String userShortCode,Boolean active) {
         List<UrlData> oldUrlDataList = urlRepository.findByIdAndUser(id,user);
         if(oldUrlDataList.isEmpty())
             throw new NotFoundException("given id does not exist");
@@ -104,8 +104,8 @@ public class UrlShortenerService {
 
         if(userShortCode!=null)
         {
-            String shortCode = transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
-            List<UrlData> updatedUrlDataList = urlRepository.findByShortUrlAndUser(shortCode,user);
+            UrlData urlData= transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
+            List<UrlData> updatedUrlDataList = urlRepository.findByShortUrlAndUser(urlData.getShortUrl(),user);
             if(active!=null)
             {
                 UrlData updatedUrlData = updatedUrlDataList.get(0);
@@ -113,7 +113,7 @@ public class UrlShortenerService {
             }
             String oldShortCode = oldUrlData.getShortUrl();
             int isDeleted = urlRepository.deleteByShortUrlAndUser(oldShortCode,user);
-            return "Your Url is updated";
+            return urlData;
         }
         else
         {
@@ -121,7 +121,7 @@ public class UrlShortenerService {
             if(expiryDate!=null)   oldUrlData.setExpiryDate(expiryDate.toEpochMilli());
             if(active!=null)   oldUrlData.setActive(active);
             urlRepository.save(oldUrlData);
-            return "Your Url is updated";
+            return oldUrlData;
         }
         //return transactionalUrlService.updateUrlTransactional(id,longUrl, user, expiryDate, userShortCode);
     }

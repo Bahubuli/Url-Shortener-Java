@@ -26,7 +26,7 @@ public class TransactionalUrlService {
     private EntityManager entityManager;
 
     @Transactional
-    public String shortenUrlTransactional(String longUrl, User user,
+    public UrlData shortenUrlTransactional(String longUrl, User user,
                                           Instant expiryDate, String userShortCode) {
         // Handle custom short code
         if (userShortCode != null) {
@@ -36,7 +36,7 @@ public class TransactionalUrlService {
         return handleSystemGeneratedCode(longUrl, user, expiryDate);
     }
 
-    private String handleCustomShortCode(String longUrl, User user,
+    private UrlData handleCustomShortCode(String longUrl, User user,
                                          Instant expiryDate, String userShortCode) {
         // Check for duplicate short URL
         if (urlRepository.findByShortUrl(userShortCode) != null) {
@@ -55,10 +55,10 @@ public class TransactionalUrlService {
         UrlData urlData = createUrlData(desiredId, userShortCode, longUrl, user, expiryDate);
 
         entityManager.persist(urlData);
-        return userShortCode;
+        return urlData;
     }
 
-    private String handleSystemGeneratedCode(String longUrl, User user, Instant expiryDate) {
+    private UrlData handleSystemGeneratedCode(String longUrl, User user, Instant expiryDate) {
         Long nextId;
         // Loop until an available ID is found
         while (true) {
@@ -77,7 +77,7 @@ public class TransactionalUrlService {
         // Create entity with system-generated ID
         UrlData urlData = createUrlData(nextId, shortCode, longUrl, user, expiryDate);
         entityManager.persist(urlData);
-        return shortCode;
+        return urlData;
     }
 
     private UrlData createUrlData(Long id, String shortCode, String longUrl,
@@ -102,4 +102,3 @@ public class TransactionalUrlService {
 
 
 }
-
