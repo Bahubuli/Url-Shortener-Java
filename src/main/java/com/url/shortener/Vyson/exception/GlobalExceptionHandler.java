@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<String> handleUnauthorized(UnauthorizedException ex) {
-        return  ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
     @ExceptionHandler(ExpiredException.class)
     public ResponseEntity<String> handleExpired(ExpiredException ex) {

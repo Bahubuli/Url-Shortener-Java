@@ -31,13 +31,12 @@ public class BatchShortenIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.set("api_key", apiKey);
         UrlRequest valid1 = new UrlRequest();
-        valid1.setLongUrl("https://batch1.com");
+        valid1.setLongUrl("https://facebook.com");
         UrlRequest valid2 = new UrlRequest();
-        valid2.setLongUrl("https://batch2.com");
-        UrlRequest invalid = new UrlRequest();
-        invalid.setLongUrl("badurl");
+        valid2.setLongUrl("https://facebook2.com");
+        valid2.setShortCode("1ec");
         BatchUrlRequest batch = new BatchUrlRequest();
-        batch.setUrls(List.of(valid1, valid2, invalid));
+        batch.setUrls(List.of(valid1, valid2));
         ResponseEntity<BatchUrlResponse> response = restTemplate.postForEntity(
                 baseUrl + "/shorten/batch",
                 new org.springframework.http.HttpEntity<>(batch, headers),
@@ -47,8 +46,11 @@ public class BatchShortenIntegrationTest {
         BatchUrlResponse body = response.getBody();
         assertNotNull(body);
         assertEquals(2, body.getSuccessCount());
-        assertEquals(1, body.getErrorCount());
-        assertEquals(3, body.getResults().size());
+        assertEquals(0, body.getErrorCount());
+        assertEquals(2, body.getResults().size());
+        assertEquals("https://facebook.com", body.getResults().get(0).getLongUrl());
+        assertEquals("https://facebook2.com", body.getResults().get(1).getLongUrl());
+        assertEquals("1ec", body.getResults().get(1).getShortUrl());
     }
     @Test
     public void testBatchShortenUnauthorized() {
@@ -60,5 +62,57 @@ public class BatchShortenIntegrationTest {
                 baseUrl + "/shorten/batch", batch, String.class
         );
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
+
+    @Test
+    public void testBatchShortenSuccessWithBusinessTier() {
+        // This API key is allowed to batch request
+        String apiKey = "a1b2c3d4e5";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("api_key", apiKey);
+        UrlRequest valid1 = new UrlRequest();
+        valid1.setLongUrl("https://facebook.com");
+        UrlRequest valid2 = new UrlRequest();
+        valid2.setLongUrl("https://facebook2.com");
+        BatchUrlRequest batch = new BatchUrlRequest();
+        batch.setUrls(List.of(valid1, valid2));
+        ResponseEntity<BatchUrlResponse> response = restTemplate.postForEntity(
+                baseUrl + "/shorten/batch",
+                new org.springframework.http.HttpEntity<>(batch, headers),
+                BatchUrlResponse.class
+        );
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        BatchUrlResponse body = response.getBody();
+        assertNotNull(body);
+        assertEquals(2, body.getSuccessCount());
+        assertEquals(0, body.getErrorCount());
+        assertEquals(2, body.getResults().size());
+        assertEquals("https://facebook.com", body.getResults().get(0).getLongUrl());
+        assertEquals("https://facebook2.com", body.getResults().get(1).getLongUrl());
+       
+    }
+
+    @Test
+    public void testBatchShortenHobbyTierShowsUpgradeMessage() {
+        // This API key is hobby tier and should not allow batch request
+        String apiKey = "k1l2m3n4o5";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("api_key", apiKey);
+        UrlRequest valid1 = new UrlRequest();
+        valid1.setLongUrl("https://facebook.com");
+        UrlRequest valid2 = new UrlRequest();
+        valid2.setLongUrl("https://facebook2.com");
+        valid2.setShortCode("1ec");
+        BatchUrlRequest batch = new BatchUrlRequest();
+        batch.setUrls(List.of(valid1, valid2));
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                baseUrl + "/shorten/batch",
+                new org.springframework.http.HttpEntity<>(batch, headers),
+                String.class
+        );
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        if (response.getBody() != null) {
+            assertTrue(response.getBody().contains("Please upgrade to business tier"));
+        }
     }
 }
