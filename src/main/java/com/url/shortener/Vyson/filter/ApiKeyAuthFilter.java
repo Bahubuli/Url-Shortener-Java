@@ -20,7 +20,7 @@ import java.util.Optional;
 @Component // Make this a Spring bean
 // @Order is not strictly needed here if using FilterRegistrationBean,
 // but can be kept for clarity if you have other filters managed by @Component
-@Order(2) // Give it a higher order than the logging filter (e.g., 2)
+@Order(3) // Give it a higher order than the logging filter (e.g., 2)
 public class ApiKeyAuthFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiKeyAuthFilter.class);
