@@ -76,8 +76,6 @@ public class UrlShortenerService {
     }
 
     public List<UrlResponse> shortenUrlsInBatch(List<UrlRequest> requests, User user) {
-        if(user.getTier().equals("hobby"))
-            throw new UnauthorizedException("Please upgrade to business tier in order to bulk shortening operation");
         List<UrlResponse> responses = new ArrayList<>();
         for (UrlRequest req : requests) {
             try {
