@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.time.Instant; // For the timestamp
 
 @Component // <--- Tells Spring to manage this as a bean and register it as a Filter
-@Order(1) // <--- Gives this Filter a high priority (runs early in the chain)
+@Order(4) // <--- Gives this Filter a high priority (runs early in the chain)
 public class RequestLoggingFilter implements Filter { // <--- Implements the Filter interface
 
     // --- Standard Logging Setup ---
