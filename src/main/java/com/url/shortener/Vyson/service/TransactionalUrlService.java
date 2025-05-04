@@ -38,6 +38,7 @@ public class TransactionalUrlService {
 
     private UrlData handleCustomShortCode(String longUrl, User user,
                                          Instant expiryDate, String userShortCode) {
+        System.out.println("Handling Custom short code");
         // Check for duplicate short URL
         if (urlRepository.findByShortUrl(userShortCode) != null) {
             throw new DuplicateUrlException("This short code is already in use");
@@ -87,6 +88,7 @@ public class TransactionalUrlService {
         urlData.setShortUrl(shortCode);
         urlData.setLongUrl(longUrl);
         urlData.setUser(user);
+        urlData.setActive(true);
 
         if (expiryDate != null) {
             urlData.setExpiryDate(expiryDate.toEpochMilli());

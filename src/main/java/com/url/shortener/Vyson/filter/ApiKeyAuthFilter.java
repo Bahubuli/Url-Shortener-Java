@@ -79,7 +79,7 @@ public class ApiKeyAuthFilter implements Filter {
 
         // --- If all checks pass ---
         // Store the authenticated User object in the request attributes
-        httpRequest.setAttribute("authenticatedUser", authenticatedUser);
+        httpRequest.setAttribute("user", authenticatedUser);
 
         // Continue the filter chain
         chain.doFilter(request, response);

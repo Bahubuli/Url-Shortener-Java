@@ -4,6 +4,7 @@ import com.url.shortener.Vyson.dto.*;
 import com.url.shortener.Vyson.modal.UrlData;
 import com.url.shortener.Vyson.modal.User;
 import com.url.shortener.Vyson.repo.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,17 +30,16 @@ private UrlShortenerService urlShortenerService;
 private UserRepository userRepository;
 
 @PostMapping("/shorten")
-public ResponseEntity<UrlResponse> shortenUrl(@RequestHeader(value="api_key", required = false) String api_key,
+public ResponseEntity<UrlResponse> shortenUrl(HttpServletRequest servletRequest,
                          @Valid @RequestBody UrlRequest req) {
 
-   User user = userRepository.findByApiKey(api_key)
-           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
+   User user = (User) servletRequest.getAttribute("user");
 
    String longUrl = req.getLongUrl();
    String userShortCode = req.getShortCode();
    Instant expiryDate = req.getExpiryDate();
    UrlData urlData = urlShortenerService.GenerateShortCode(longUrl,user,expiryDate,userShortCode);
-   UrlResponse response =  new UrlResponse(String.valueOf(urlData.getId()),longUrl,urlData.getShortUrl(),true,null);
+   UrlResponse response =  new UrlResponse(String.valueOf(urlData.getId()),longUrl,urlData.getShortUrl(),urlData.getActive(),true,null);
    return ResponseEntity.status(HttpStatus.CREATED).body(response);
 }
 
@@ -53,10 +53,9 @@ public ResponseEntity<UrlResponse> shortenUrl(@RequestHeader(value="api_key", re
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body("URL Not Found");
 }
 @DeleteMapping("/delete")
-   public ResponseEntity<?> deleteShortCode(@RequestParam("shortCode") String shortCode,@RequestHeader(value="api_key", required = false) String api_key) {
+   public ResponseEntity<?> deleteShortCode(@RequestParam("shortCode") String shortCode, HttpServletRequest servletRequest) {
 
-   User user = userRepository.findByApiKey(api_key)
-           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
+   User user = (User) servletRequest.getAttribute("user");
 
       String response = urlShortenerService.deleteShortCode(shortCode,user);
       return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -65,9 +64,8 @@ public ResponseEntity<UrlResponse> shortenUrl(@RequestHeader(value="api_key", re
 
 @PostMapping("/shorten/batch")
 public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody BatchUrlRequest req,
-                                                       @RequestHeader(value="api_key", required = false) String api_key) {
-   User user = userRepository.findByApiKey(api_key)
-           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
+                                                       HttpServletRequest servletRequest) {
+   User user = (User) servletRequest.getAttribute("user");
 
    List<UrlResponse> results = urlShortenerService.shortenUrlsInBatch(req.getUrls(), user);
 
@@ -87,10 +85,9 @@ public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody Batch
    @PutMapping("/urlData")
    public ResponseEntity<UrlResponse> updateUrlData(
            @Valid @RequestBody UpdateUrlDataRequest req,
-           @RequestHeader(value="api_key", required = false) String api_key) {
+           HttpServletRequest servletRequest) {
 
-      User user = userRepository.findByApiKey(api_key)
-              .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
+      User user = (User) servletRequest.getAttribute("user");
 
       Long id = req.getId();
       String longUrl = req.getLongUrl();
@@ -100,19 +97,18 @@ public ResponseEntity<BatchUrlResponse> shortenInBatch(@Valid @RequestBody Batch
 
       // Update the URL data and get the new short code
       UrlData urlData = urlShortenerService.updateUrlData(id, longUrl, user, expiryDate, userShortCode, active);
-
+      System.out.println("urlData from service "+urlData);
       // Create the response object; here we're reusing the same UrlResponse structure
-      UrlResponse response = new UrlResponse(String.valueOf(urlData.getId()),longUrl, urlData.getShortUrl(), urlData.getActive(), null);
+      UrlResponse response = new UrlResponse(String.valueOf(urlData.getId()),longUrl, urlData.getShortUrl(),urlData.getActive(),true, null);
 
       // Return the response with HTTP status 200 OK
       return ResponseEntity.ok(response);
    }
 
 @GetMapping("/allUrls")
-   public List<UrlDataDTO>GetAllUrls(@RequestHeader(value="api_key", required = false) String api_key) {
+   public List<UrlDataDTO>GetAllUrls(HttpServletRequest servletRequest) {
 
-   User user = userRepository.findByApiKey(api_key)
-           .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
+   User user = (User) servletRequest.getAttribute("user");
 
    return urlShortenerService.getAllUrls(user);
 }

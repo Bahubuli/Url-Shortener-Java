@@ -11,6 +11,7 @@ public class UrlResponse {
     private String id;
     private String longUrl;
     private String shortUrl;
+    private boolean active;
     private boolean success;
     private ErrorResponse error;
 

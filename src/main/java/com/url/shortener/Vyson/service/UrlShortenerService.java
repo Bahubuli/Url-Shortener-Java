@@ -6,11 +6,14 @@ import com.url.shortener.Vyson.dto.UrlResponse;
 import com.url.shortener.Vyson.exception.ExpiredException;
 import com.url.shortener.Vyson.exception.NotFoundException;
 import com.url.shortener.Vyson.exception.UnauthorizedException;
+import com.url.shortener.Vyson.filter.ApiKeyAuthFilter;
 import com.url.shortener.Vyson.modal.UrlData;
 import com.url.shortener.Vyson.modal.User;
 import com.url.shortener.Vyson.repo.UrlRepository;
 import com.url.shortener.Vyson.utils.Base62Encoder;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +26,12 @@ public class UrlShortenerService {
 
     @Autowired
     public UrlRepository urlRepository;
-    @Autowired
-    public Base62Encoder base62Encoder;
 
     @Autowired
     public TransactionalUrlService transactionalUrlService;
 
+
+    private static final Logger logger = LoggerFactory.getLogger(UrlShortenerService.class);
 
     public UrlData GenerateShortCode(String longUrl, User user, Instant expiryDate, String userShortCode) {
         return transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
@@ -82,11 +85,11 @@ public class UrlShortenerService {
 
                 UrlData urlData = GenerateShortCode(req.getLongUrl(), user, req.getExpiryDate(), req.getShortCode());
 
-                responses.add(new UrlResponse(String.valueOf(urlData.getId()),urlData.getLongUrl(), urlData.getShortUrl(), true, null));
+                responses.add(new UrlResponse(String.valueOf(urlData.getId()),urlData.getLongUrl(), urlData.getShortUrl(),urlData.getActive(), true, null));
             } catch (Exception e) {
                 // In case of any error, create an error response.
                 UrlResponse.ErrorResponse errorResponse = new UrlResponse.ErrorResponse("ERR001", e.getMessage());
-                responses.add(new UrlResponse(null,req.getLongUrl(), null, false, errorResponse));
+                responses.add(new UrlResponse(null,req.getLongUrl(), null,false, false, errorResponse));
             }
         }
         return responses;
@@ -99,10 +102,11 @@ public class UrlShortenerService {
             throw new NotFoundException("given id does not exist");
         UrlData oldUrlData = oldUrlDataList.get(0);
 
-
+        System.out.println("old UrlData inside updateUrlData" + oldUrlData);
         if(userShortCode!=null)
         {
             UrlData urlData= transactionalUrlService.shortenUrlTransactional(longUrl, user, expiryDate, userShortCode);
+            System.out.println("newly created urlData from transactional "+urlData);
             List<UrlData> updatedUrlDataList = urlRepository.findByShortUrlAndUser(urlData.getShortUrl(),user);
             if(active!=null)
             {
@@ -110,11 +114,14 @@ public class UrlShortenerService {
                 updatedUrlData.setActive(active);
             }
             String oldShortCode = oldUrlData.getShortUrl();
+            logger.info("oldShortCode that will be deleted: "+oldShortCode);
             int isDeleted = urlRepository.deleteByShortUrlAndUser(oldShortCode,user);
+
             return urlData;
         }
         else
         {
+            System.out.println("looks like user short code is not considered");
             if(longUrl!=null) oldUrlData.setLongUrl(longUrl);
             if(expiryDate!=null)   oldUrlData.setExpiryDate(expiryDate.toEpochMilli());
             if(active!=null)   oldUrlData.setActive(active);
